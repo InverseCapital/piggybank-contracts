@@ -71,6 +71,10 @@ contract PiggyBank is Ownable {
         rewardsDeadline = block.timestamp.add(rewardsSpan);
     }
 
+    function getUsers() public view returns (address[] memory) {
+        return users;
+    }
+
     /**
      * Creates a new deposit
      * @param name reason of the deposit
@@ -105,6 +109,12 @@ contract PiggyBank is Ownable {
             amount,
             false
         );
+
+        // If is first deposit, add user to list of users
+        if (userDeposits[msg.sender].length == 0) {
+            users.push(msg.sender);
+        }
+
         userDeposits[msg.sender].push(id);
 
         // Transfer tokens to the smart contract
@@ -112,11 +122,6 @@ contract PiggyBank is Ownable {
 
         // Update total balance
         totalBalance = totalBalance.add(amount);
-
-        // If is first deposit, add user to list of users
-        if (userDeposits[msg.sender].length == 0) {
-            users.push(msg.sender);
-        }
     }
 
     /**
