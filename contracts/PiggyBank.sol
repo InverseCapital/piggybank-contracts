@@ -144,7 +144,7 @@ contract PiggyBank is Ownable {
         require(amount <= deposits[id].amount, "No enough funds.");
 
         uint withdrawalAmount = amount;
-        deposits[id].amount.sub(amount);
+        deposits[id].amount = deposits[id].amount.sub(amount);
 
         // If it's early withdraw
         if (block.timestamp <= deposits[id].withdrawalDate) {
@@ -155,14 +155,14 @@ contract PiggyBank is Ownable {
             deposits[id].earlyWithdrawn = true;
 
             // Update total rewards
-            totalRewards.add(penalty);
+            totalRewards = totalRewards.add(penalty);
         }
 
         // Transfer tokens to user
         token.transfer(msg.sender, withdrawalAmount);
 
         // Update total balance
-        totalBalance.sub(amount);
+        totalBalance = totalBalance.sub(amount);
     }
 
     function getUserValidDeposit(address user) public view returns (uint256) {
@@ -199,11 +199,10 @@ contract PiggyBank is Ownable {
         rewardsDeadline = block.timestamp.add(rewardsSpan);
     }
 
-    // function claimRewards() public {
-    //     require(hasRewards[msg.sender] == true);
+    function claimRewards() public {
+        require(pendingRewards[msg.sender] > 0, "No rewards to redeem");
 
-    //     // sum = getUserTotalDeposited()
-
-    //     // rewards = sum * totalRewards / totalBalance
-    // }
+        token.transfer(msg.sender, pendingRewards[msg.sender]);
+        pendingRewards[msg.sender] = 0;
+    }
 }
