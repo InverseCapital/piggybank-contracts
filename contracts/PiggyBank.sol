@@ -29,6 +29,10 @@ contract PiggyBank is Ownable {
     // Total amount of rewards
     uint256 public totalRewards;
 
+    uint256 public rewardsDeadline;
+
+    uint256 public rewardsSpan = 5 minutes;
+
     // Id to deposit info
     mapping(uint256 => Deposit) public deposits;
 
@@ -64,6 +68,7 @@ contract PiggyBank is Ownable {
 
     constructor(IERC20 _tokenContract) {
         token = _tokenContract;
+        rewardsDeadline = block.timestamp.add(rewardsSpan);
     }
 
     /**
@@ -177,11 +182,22 @@ contract PiggyBank is Ownable {
         return sum;
     }
 
-    // function udpateRewardBalances() public {
-    //     for (uint256 i = 0; i < users.length; i++) {
+    function udpateRewardBalances() public {
+        require(
+            block.timestamp >= rewardsDeadline,
+            "Rewards cannot be set yet, deadline not reached"
+        );
 
-    //     }
-    // }
+        for (uint256 i = 0; i < users.length; i++) {
+            uint256 validDeposit = getUserValidDeposit(users[i]);
+
+            uint256 rewards = (validDeposit * totalRewards) / totalBalance;
+            pendingRewards[users[i]] = pendingRewards[users[i]].add(rewards);
+        }
+
+        totalRewards = 0;
+        rewardsDeadline = block.timestamp.add(rewardsSpan);
+    }
 
     // function claimRewards() public {
     //     require(hasRewards[msg.sender] == true);
