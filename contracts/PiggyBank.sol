@@ -22,6 +22,9 @@ contract PiggyBank is Ownable {
     // Rewards a user can redeem
     mapping(address => uint256) public pendingRewards;
 
+    mapping(address => bool) public hasRewards;
+    uint256 public totalRewards;
+
     // Id to deposit info
     mapping(uint256 => Deposit) public deposits;
 
@@ -45,6 +48,15 @@ contract PiggyBank is Ownable {
 
     // Token used for deposits
     IERC20 public token;
+
+    modifier onlyDepositOwner(uint id) {
+        bool found = false;
+        for (uint256 i = 0; i < userDeposits[msg.sender].length; i++) {
+            if (id == userDeposits[msg.sender][i]) found = true;
+        }
+        require(found, "Caller is not the owner of the deposit.");
+        _;
+    }
 
     constructor(IERC20 _tokenContract) {
         token = _tokenContract;
@@ -85,6 +97,8 @@ contract PiggyBank is Ownable {
 
         // Update total balance
         totalBalance = totalBalance.add(amount);
+
+        hasRewards[msg.sender] = true;
     }
 
     /**
@@ -102,4 +116,38 @@ contract PiggyBank is Ownable {
 
         return allDeposits;
     }
+
+    /**
+     * Withdraws a given amount from a deposit
+     * @param id id of the deposit
+     * @param amount amount to withdraw
+     */
+    function withdraw(uint256 id, uint amount) public onlyDepositOwner(id) {
+        require(amount <= deposits[id].amount, "No enough funds.");
+
+        uint withdrawalAmount = amount;
+        deposits[id].amount.sub(amount);
+
+        // If it's early withdraw
+        if (block.timestamp <= deposits[id].withdrawalDate) {
+            // Subtract penalty fee from withdrawal amount
+            withdrawalAmount -= (amount * penaltyFee) / 100;
+
+            hasRewards[msg.sender] = false;
+        }
+
+        // Transfer tokens to user
+        token.transfer(msg.sender, withdrawalAmount);
+
+        // Update total balance
+        totalBalance.sub(amount);
+    }
+
+    // function claimRewards() public {
+    //     require(hasRewards[msg.sender] == true);
+
+    //     // sum = getUserTotalDeposited()
+
+    //     // rewards = sum * totalRewards / totalBalance
+    // }
 }

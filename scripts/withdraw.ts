@@ -10,14 +10,12 @@ async function main() {
 
   const piggyBankContract = await getPiggyBankContract(accounts[0])
 
-  const name = await readLine('Insert name of deposit: ')
-  const withdrawalDate = await readLine('Insert withdrawal date: ')
+  const id = await readLine('Insert id of deposit: ')
   const amount = await readLine('Insert amount: ')
-  console.log(`Creating deposit...`)
+  console.log(`Withdrawing...`)
 
-  const tx = await piggyBankContract.deposit(
-    name,
-    withdrawalDate,
+  const tx = await piggyBankContract.withdraw(
+    id,
     ethers.utils.parseEther(amount)
   )
   await tx.wait()
