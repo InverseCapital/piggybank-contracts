@@ -6,9 +6,9 @@ import readLine from '../utils/readline'
 
 async function main() {
   const accounts = await ethers.getSigners()
-  console.log('Using address: ', accounts[0].address)
+  console.log('Using address: ', accounts[1].address)
 
-  const piggyBankContract = await getPiggyBankContract(accounts[0])
+  const piggyBankContract = await getPiggyBankContract(accounts[1])
 
   const name = await readLine('Insert name of deposit: ')
   const withdrawalDate = await readLine('Insert withdrawal date: ')
