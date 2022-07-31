@@ -9,11 +9,9 @@ async function main() {
 
   const piggyBankContract = await getPiggyBankContract(accounts[0])
 
-  const deposit = await piggyBankContract.getUserValidDeposit(
-    accounts[0].address
-  )
+  const users = await piggyBankContract.getUsers()
 
-  console.log('Valid deposit: ', ethers.utils.formatEther(deposit))
+  console.log('Users: ', users)
   process.exit()
 }
 

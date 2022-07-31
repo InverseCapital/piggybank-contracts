@@ -7,11 +7,15 @@ async function main() {
   const accounts = await ethers.getSigners()
   console.log('Using address: ', accounts[0].address)
 
+  const users = accounts.slice(0, 5)
+
   const tokenContract = await getTokenContract(accounts[0])
 
-  const balance = await tokenContract.balanceOf(accounts[0].address)
+  for (const user of users) {
+    const balance = await tokenContract.balanceOf(user.address)
+    console.log(`${user.address}:${ethers.utils.formatEther(balance)}`)
+  }
 
-  console.log('Token balance: ', ethers.utils.formatEther(balance))
   process.exit()
 }
 

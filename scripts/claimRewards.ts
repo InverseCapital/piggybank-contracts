@@ -2,12 +2,16 @@ import 'dotenv/config'
 import { ethers } from 'hardhat'
 
 import { getPiggyBankContract } from '../utils/contracts'
+import readLine from '../utils/readline'
 
 async function main() {
-  const accounts = await ethers.getSigners()
-  console.log('Using address: ', accounts[0].address)
+  const accountIndex = await readLine('Insert account index to use: ')
+  const index = parseInt(accountIndex)
 
-  const piggyBankContract = await getPiggyBankContract(accounts[0])
+  const accounts = await ethers.getSigners()
+  console.log('Using address: ', accounts[index].address)
+
+  const piggyBankContract = await getPiggyBankContract(accounts[index])
 
   console.log(`Claiming rewards...`)
 
