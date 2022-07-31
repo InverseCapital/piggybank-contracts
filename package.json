@@ -7,6 +7,7 @@
   "scripts": {
     "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
     "deploy:mumbai": "hardhat run scripts/deploy.ts --network mumbai",
+    "setup": "hardhat run scripts/deploy-setup.ts --network localhost",
     "chain": "hardhat node",
     "compile": "hardhat compile",
     "test": "hardhat test"

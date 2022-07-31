@@ -7,6 +7,8 @@ async function main() {
   const accounts = await ethers.getSigners()
   console.log('Using address: ', accounts[0].address)
 
+  const users = accounts.slice(0, 5)
+
   // Deploy token contract
   const myTokenContract = await deployContract<MyToken>(
     'MyToken',
@@ -23,6 +25,20 @@ async function main() {
     'Deployed PiggyBank contract at address: ',
     piggyBankContract.address
   )
+
+  for (const [index, user] of users.entries()) {
+    // Approve token spending
+    const approveTx = await myTokenContract
+      .connect(user)
+      .approve(piggyBankContract.address, ethers.utils.parseEther('100'))
+    approveTx.wait()
+
+    // Make a deposit
+    const depositTx = await piggyBankContract
+      .connect(user)
+      .deposit(`Deposit ${index}`, 999999999999, ethers.utils.parseEther('50'))
+    depositTx.wait()
+  }
 }
 
 main().catch((error) => {
