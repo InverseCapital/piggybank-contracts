@@ -1,23 +1,32 @@
-import { ethers } from "hardhat";
+import { ethers } from 'hardhat'
+import { MyToken, PiggyBank } from '../typechain-types'
+
+import { deployContract } from '../utils/contracts'
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
+  const accounts = await ethers.getSigners()
 
-  const lockedAmount = ethers.utils.parseEther("1");
+  console.log('Using address: ', accounts[0].address)
 
-  const Lock = await ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+  // Deploy token contract
+  const myTokenContract = await deployContract<MyToken>(
+    'MyToken',
+    accounts.slice(0, 5).map((account) => account.address)
+  )
+  console.log('Deployed MyToken contract at address: ', myTokenContract.address)
 
-  await lock.deployed();
-
-  console.log("Lock with 1 ETH deployed to:", lock.address);
+  // Deploy piggyBank contract
+  const piggyBankContract = await deployContract<PiggyBank>(
+    'PiggyBank',
+    myTokenContract.address
+  )
+  console.log(
+    'Deployed PiggyBank contract at address: ',
+    piggyBankContract.address
+  )
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+  console.error(error)
+  process.exitCode = 1
+})
