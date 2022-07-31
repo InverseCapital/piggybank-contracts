@@ -17,12 +17,16 @@ contract PiggyBank is Ownable {
         string name; // reason of the deposit
         uint256 withdrawalDate; // date when the deposit can be withdrawn
         uint256 amount; // amount deposited
+        bool earlyWithdrawn; // whether the deposit has been (partially) withdrawn before due date
     }
 
     // Rewards a user can redeem
     mapping(address => uint256) public pendingRewards;
 
-    mapping(address => bool) public hasRewards;
+    // Users who have a deposit
+    address[] public users;
+
+    // Total amount of rewards
     uint256 public totalRewards;
 
     // Id to deposit info
@@ -89,7 +93,13 @@ contract PiggyBank is Ownable {
         // Create new deposit
         uint256 id = idCounter.current();
         idCounter.increment();
-        deposits[id] = Deposit(depositDate, name, withdrawalDate, amount);
+        deposits[id] = Deposit(
+            depositDate,
+            name,
+            withdrawalDate,
+            amount,
+            false
+        );
         userDeposits[msg.sender].push(id);
 
         // Transfer tokens to the smart contract
@@ -98,7 +108,10 @@ contract PiggyBank is Ownable {
         // Update total balance
         totalBalance = totalBalance.add(amount);
 
-        hasRewards[msg.sender] = true;
+        // If is first deposit, add user to list of users
+        if (userDeposits[msg.sender].length == 0) {
+            users.push(msg.sender);
+        }
     }
 
     /**
@@ -131,9 +144,13 @@ contract PiggyBank is Ownable {
         // If it's early withdraw
         if (block.timestamp <= deposits[id].withdrawalDate) {
             // Subtract penalty fee from withdrawal amount
-            withdrawalAmount -= (amount * penaltyFee) / 100;
+            uint256 penalty = (amount * penaltyFee) / 100;
+            withdrawalAmount = withdrawalAmount.sub(penalty);
 
-            hasRewards[msg.sender] = false;
+            deposits[id].earlyWithdrawn = true;
+
+            // Update total rewards
+            totalRewards.add(penalty);
         }
 
         // Transfer tokens to user
@@ -142,6 +159,29 @@ contract PiggyBank is Ownable {
         // Update total balance
         totalBalance.sub(amount);
     }
+
+    function getUserValidDeposit(address user) public view returns (uint256) {
+        uint256[] memory depositIds = userDeposits[user];
+        uint256 length = depositIds.length;
+
+        uint256 sum = 0;
+
+        for (uint256 i = 0; i < length; i++) {
+            Deposit memory d = deposits[depositIds[i]];
+
+            if (!d.earlyWithdrawn) {
+                sum = sum.add(d.amount);
+            }
+        }
+
+        return sum;
+    }
+
+    // function udpateRewardBalances() public {
+    //     for (uint256 i = 0; i < users.length; i++) {
+
+    //     }
+    // }
 
     // function claimRewards() public {
     //     require(hasRewards[msg.sender] == true);
