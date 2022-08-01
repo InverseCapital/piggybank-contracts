@@ -13,10 +13,11 @@ contract PiggyBank is Ownable {
     using SafeMath for uint256;
 
     struct Deposit {
+        uint256 id;
         uint256 depositDate; // date when the deposit was made
-        string name; // reason of the deposit
         uint256 withdrawalDate; // date when the deposit can be withdrawn
         uint256 amount; // amount deposited
+        string name; // reason of the deposit
         bool earlyWithdrawn; // whether the deposit has been (partially) withdrawn before due date
     }
 
@@ -103,10 +104,11 @@ contract PiggyBank is Ownable {
         uint256 id = idCounter.current();
         idCounter.increment();
         deposits[id] = Deposit(
+            id,
             depositDate,
-            name,
             withdrawalDate,
             amount,
+            name,
             false
         );
 
