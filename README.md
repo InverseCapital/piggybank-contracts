@@ -9,11 +9,18 @@ If a user withdraws its deposit before the established date then he will be pena
 
 The application will be composed of:
 
-- **Smart Contracts**: the protocol will live in Polygon blockchain and it will be composed of a main smart contract that handles the creation and withdraw of deposits and rewards distribution.
+### Smart Contracts
 
-- **Frontend**: there will be a web interface to interact with the protocol, which will be made in Next.js, Tailwind CSS and Wagmi library. The application will allow users to login with Metamask and create, withdraw and visualize deposits and claim their rewards. It will also show some statistics about the protocol and users behaviour.
+The protocol will live on the Polygon blockchain and it will be composed of a main smart contract that handles the creation and withdraw of deposits and rewards distribution.
 
-- **Backend**: we'll need to store some data for analytics purposes on a database. We'll then build an API to be able to obtain this data.
+## Frontend
+
+It will be possible to interact with the protocol through a web interface. It will be made using Next.js, Tailwind CSS and Wagmi library.
+The application will allow users to login with Metamask and create, withdraw and visualize deposits and claim their rewards. It will also show some statistics about the protocol and users behaviour.
+
+## Backend:
+
+We'll need to store some data for analytics purposes on a database. We'll then build an API on top of it which will enable to obtain this data.
 
 ## Further Development
 
