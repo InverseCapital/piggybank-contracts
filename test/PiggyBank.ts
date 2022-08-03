@@ -16,6 +16,11 @@ describe('CryviaQuiz Contract', () => {
   let users: SignerWithAddress[]
 
   const NUMBER_OF_USERS = 5
+  const DEPOSIT_ID = 0
+  const DEPOSIT_NAME = 'Buying a house'
+  const DEPOSIT_AMOUNT = ethers.utils.parseEther('50')
+  const DEPOSIT_WITHDRAW_DATE = dateNowInSecs() + daysToSeconds(30)
+  const PLATFORM_FEE = 2
 
   before(async () => {
     const accounts = await ethers.getSigners()
@@ -29,7 +34,8 @@ describe('CryviaQuiz Contract', () => {
 
     piggyBankContract = await deployContract<PiggyBank>(
       'PiggyBank',
-      tokenContract.address
+      tokenContract.address,
+      PLATFORM_FEE
     )
   })
 
@@ -49,11 +55,6 @@ describe('CryviaQuiz Contract', () => {
     let user: SignerWithAddress
     let userBalance: BigNumber
     let contractBalance: BigNumber
-
-    const DEPOSIT_ID = 0
-    const DEPOSIT_NAME = 'Buying a house'
-    const DEPOSIT_AMOUNT = 50
-    const DEPOSIT_WITHDRAW_DATE = dateNowInSecs() + daysToSeconds(30)
 
     before(async () => {
       user = users[1]
@@ -114,5 +115,52 @@ describe('CryviaQuiz Contract', () => {
       const totalBalance = await piggyBankContract.totalBalance()
       expect(totalBalance).to.eq(DEPOSIT_AMOUNT)
     })
+  })
+
+  describe('when a user withdraws a deposit before withdrawal date', async () => {
+    let user: SignerWithAddress
+    let userBalance: BigNumber
+    let contractBalance: BigNumber
+
+    const WITHDRAW_AMOUNT = ethers.utils.parseEther('20')
+
+    before(async () => {
+      user = users[1]
+
+      // Set balances before deposit
+      userBalance = await tokenContract.balanceOf(user.address)
+      contractBalance = await tokenContract.balanceOf(piggyBankContract.address)
+
+      // Make deposit
+      const tx = await piggyBankContract
+        .connect(user)
+        .withdraw(DEPOSIT_ID, WITHDRAW_AMOUNT)
+      await tx.wait()
+    })
+
+    it('decreases the deposit amount', async () => {
+      const deposit = await piggyBankContract.deposits(DEPOSIT_ID)
+      expect(deposit.amount).to.eq(DEPOSIT_AMOUNT.sub(WITHDRAW_AMOUNT))
+    })
+
+    it('marks the deposit as early withdrawn', async () => {
+      const deposit = await piggyBankContract.deposits(DEPOSIT_ID)
+      expect(deposit.earlyWithdrawn).to.eq(true)
+    })
+
+    it('adds the penalty to the rewards', async () => {
+      // const totalRewards = await piggyBankContract.totalRewards()
+      // expect(totalRewards).to.eq(WITHDRAW_AMOUNT.mul(PLATFORM_FEE).div(100))
+    })
+
+    it('increases user token balance', async () => {
+      // const updatedUserBalance = await tokenContract.balanceOf(user.address)
+      // const fee = WITHDRAW_AMOUNT.mul(PLATFORM_FEE).div(100)
+      // expect(updatedUserBalance).to.eq(userBalance.add(DEPOSIT_AMOUNT.sub(fee)))
+    })
+
+    it('decreases PiggyBank contract token balance', async () => {})
+
+    it('decreases total deposit balance', async () => {})
   })
 })
