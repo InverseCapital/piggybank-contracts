@@ -21,6 +21,7 @@ describe('CryviaQuiz Contract', () => {
   const DEPOSIT_AMOUNT = ethers.utils.parseEther('50')
   const DEPOSIT_WITHDRAW_DATE = dateNowInSecs() + daysToSeconds(30)
   const PLATFORM_FEE = 2
+  const PENALTY_FEE = 2
 
   before(async () => {
     const accounts = await ethers.getSigners()
@@ -35,7 +36,8 @@ describe('CryviaQuiz Contract', () => {
     piggyBankContract = await deployContract<PiggyBank>(
       'PiggyBank',
       tokenContract.address,
-      PLATFORM_FEE
+      PLATFORM_FEE,
+      PENALTY_FEE
     )
   })
 
@@ -149,18 +151,31 @@ describe('CryviaQuiz Contract', () => {
     })
 
     it('adds the penalty to the rewards', async () => {
-      // const totalRewards = await piggyBankContract.totalRewards()
-      // expect(totalRewards).to.eq(WITHDRAW_AMOUNT.mul(PLATFORM_FEE).div(100))
+      const totalRewards = await piggyBankContract.totalRewards()
+      expect(totalRewards).to.eq(WITHDRAW_AMOUNT.mul(PENALTY_FEE).div(100))
     })
 
     it('increases user token balance', async () => {
-      // const updatedUserBalance = await tokenContract.balanceOf(user.address)
-      // const fee = WITHDRAW_AMOUNT.mul(PLATFORM_FEE).div(100)
-      // expect(updatedUserBalance).to.eq(userBalance.add(DEPOSIT_AMOUNT.sub(fee)))
+      const updatedUserBalance = await tokenContract.balanceOf(user.address)
+      const fee = WITHDRAW_AMOUNT.mul(PENALTY_FEE).div(100)
+      expect(updatedUserBalance).to.eq(
+        userBalance.add(WITHDRAW_AMOUNT.sub(fee))
+      )
     })
 
-    it('decreases PiggyBank contract token balance', async () => {})
+    it('decreases PiggyBank contract token balance', async () => {
+      const updatedContractBalance = await tokenContract.balanceOf(
+        piggyBankContract.address
+      )
+      const fee = WITHDRAW_AMOUNT.mul(PENALTY_FEE).div(100)
+      expect(updatedContractBalance).to.eq(
+        contractBalance.sub(WITHDRAW_AMOUNT.sub(fee))
+      )
+    })
 
-    it('decreases total deposit balance', async () => {})
+    it('decreases total deposit balance', async () => {
+      const totalBalance = await piggyBankContract.totalBalance()
+      expect(totalBalance).to.eq(DEPOSIT_AMOUNT.sub(WITHDRAW_AMOUNT))
+    })
   })
 })
