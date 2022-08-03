@@ -43,11 +43,11 @@ contract PiggyBank is Ownable {
     // Counter of deposit ids
     Counters.Counter public idCounter;
 
-    // Fee users pay to withdraw before the date (as a percentage of the withdrawn amount)
+    // Fee users pay to withdraw before the date (as a percentage of the withdrawn amount, with 2 decimals)
     uint8 public penaltyFee;
 
-    // Fee paid to the platform for an early withdraw (as a percentage to the penalty fee)
-    uint8 public platformFee = 2;
+    // Fee paid to the platform for an early withdraw (as a percentage to the withdrawn amount, with 2 decimals)
+    uint8 public platformFee;
 
     // Amount that the owner can redeem
     uint256 public ownerBalance;
@@ -162,13 +162,21 @@ contract PiggyBank is Ownable {
         // If it's early withdraw
         if (block.timestamp <= deposits[id].withdrawalDate) {
             // Subtract penalty fee from withdrawal amount
-            uint256 penalty = (amount * penaltyFee) / 100;
+            uint256 penalty = ((amount * penaltyFee) / 100) / 100;
+
+            // Subtract penalty fee and platform profit from withdrawal amount
+            uint256 platformProfit = ((amount * platformFee) / 100) / 100;
+
             withdrawalAmount = withdrawalAmount.sub(penalty);
+            withdrawalAmount = withdrawalAmount.sub(platformProfit);
 
             deposits[id].earlyWithdrawn = true;
 
             // Update total rewards
             totalRewards = totalRewards.add(penalty);
+
+            // Update owner balance
+            ownerBalance = ownerBalance.add(platformProfit);
         }
 
         // Transfer tokens to user

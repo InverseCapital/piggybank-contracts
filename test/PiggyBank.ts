@@ -20,8 +20,8 @@ describe('CryviaQuiz Contract', () => {
   const DEPOSIT_NAME = 'Buying a house'
   const DEPOSIT_AMOUNT = ethers.utils.parseEther('50')
   const DEPOSIT_WITHDRAW_DATE = dateNowInSecs() + daysToSeconds(30)
-  const PLATFORM_FEE = 2
-  const PENALTY_FEE = 2
+  const PLATFORM_FEE = 200
+  const PENALTY_FEE = 200
 
   before(async () => {
     const accounts = await ethers.getSigners()
@@ -125,6 +125,8 @@ describe('CryviaQuiz Contract', () => {
     let contractBalance: BigNumber
 
     const WITHDRAW_AMOUNT = ethers.utils.parseEther('20')
+    const penaltyFee = WITHDRAW_AMOUNT.mul(PENALTY_FEE).div(100).div(100)
+    const platformFee = WITHDRAW_AMOUNT.mul(PLATFORM_FEE).div(100).div(100)
 
     before(async () => {
       user = users[1]
@@ -152,14 +154,19 @@ describe('CryviaQuiz Contract', () => {
 
     it('adds the penalty to the rewards', async () => {
       const totalRewards = await piggyBankContract.totalRewards()
-      expect(totalRewards).to.eq(WITHDRAW_AMOUNT.mul(PENALTY_FEE).div(100))
+      expect(totalRewards).to.eq(penaltyFee)
+    })
+
+    it('adds the platform profit to owner balance', async () => {
+      const ownerBalance = await piggyBankContract.ownerBalance()
+      expect(ownerBalance).to.eq(platformFee)
     })
 
     it('increases user token balance', async () => {
       const updatedUserBalance = await tokenContract.balanceOf(user.address)
-      const fee = WITHDRAW_AMOUNT.mul(PENALTY_FEE).div(100)
+
       expect(updatedUserBalance).to.eq(
-        userBalance.add(WITHDRAW_AMOUNT.sub(fee))
+        userBalance.add(WITHDRAW_AMOUNT.sub(penaltyFee).sub(platformFee))
       )
     })
 
@@ -167,9 +174,9 @@ describe('CryviaQuiz Contract', () => {
       const updatedContractBalance = await tokenContract.balanceOf(
         piggyBankContract.address
       )
-      const fee = WITHDRAW_AMOUNT.mul(PENALTY_FEE).div(100)
+
       expect(updatedContractBalance).to.eq(
-        contractBalance.sub(WITHDRAW_AMOUNT.sub(fee))
+        contractBalance.sub(WITHDRAW_AMOUNT.sub(penaltyFee).sub(platformFee))
       )
     })
 
