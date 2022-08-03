@@ -172,6 +172,10 @@ contract PiggyBank is Ownable {
         totalBalance = totalBalance.sub(amount);
     }
 
+    function withdrawAll(uint256 id) public onlyDepositOwner(id) {
+        withdraw(id, deposits[id].amount);
+    }
+
     function getUserValidDeposit(address user) public view returns (uint256) {
         uint256[] memory depositIds = userDeposits[user];
         uint256 length = depositIds.length;
