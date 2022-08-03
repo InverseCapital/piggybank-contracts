@@ -67,10 +67,15 @@ contract PiggyBank is Ownable {
         _;
     }
 
-    constructor(IERC20 _tokenContract, uint8 _platformFee) {
+    constructor(
+        IERC20 _tokenContract,
+        uint8 _platformFee,
+        uint8 _penaltyFee
+    ) {
         token = _tokenContract;
         rewardsDeadline = block.timestamp.add(rewardsSpan);
         platformFee = _platformFee;
+        penaltyFee = _penaltyFee;
     }
 
     function getUsers() public view returns (address[] memory) {
