@@ -44,7 +44,7 @@ contract PiggyBank is Ownable {
     Counters.Counter public idCounter;
 
     // Fee users pay to withdraw before the date (as a percentage of the withdrawn amount)
-    uint8 public penaltyFee = 2;
+    uint8 public penaltyFee;
 
     // Fee paid to the platform for an early withdraw (as a percentage to the penalty fee)
     uint8 public platformFee = 2;
@@ -67,9 +67,10 @@ contract PiggyBank is Ownable {
         _;
     }
 
-    constructor(IERC20 _tokenContract) {
+    constructor(IERC20 _tokenContract, uint8 _platformFee) {
         token = _tokenContract;
         rewardsDeadline = block.timestamp.add(rewardsSpan);
+        platformFee = _platformFee;
     }
 
     function getUsers() public view returns (address[] memory) {
