@@ -135,8 +135,12 @@ contract PiggyBank is Ownable {
     /**
      * @return the deposits of the sender
      */
-    function getUserDeposits() public view returns (Deposit[] memory) {
-        uint256[] memory depositIds = userDeposits[msg.sender];
+    function getUserDeposits(address user)
+        public
+        view
+        returns (Deposit[] memory)
+    {
+        uint256[] memory depositIds = userDeposits[user];
         uint256 length = depositIds.length;
 
         Deposit[] memory allDeposits = new Deposit[](length);

@@ -9,7 +9,7 @@ async function main() {
 
   const piggyBankContract = await getPiggyBankContract(accounts[0])
 
-  const deposits = await piggyBankContract.getUserDeposits()
+  const deposits = await piggyBankContract.getUserDeposits(accounts[0].address)
 
   console.log('Deposits: ', deposits)
   process.exit()
