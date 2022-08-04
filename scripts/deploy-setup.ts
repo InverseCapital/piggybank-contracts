@@ -3,6 +3,9 @@ import { MyToken, PiggyBank } from '../typechain-types'
 
 import { deployContract } from '../utils/contracts'
 
+const PLATFORM_FEE = 200
+const PENALTY_FEE = 200
+
 async function main() {
   const accounts = await ethers.getSigners()
   console.log('Using address: ', accounts[0].address)
@@ -19,7 +22,9 @@ async function main() {
   // Deploy piggyBank contract
   const piggyBankContract = await deployContract<PiggyBank>(
     'PiggyBank',
-    myTokenContract.address
+    myTokenContract.address,
+    PLATFORM_FEE,
+    PENALTY_FEE
   )
   console.log(
     'Deployed PiggyBank contract at address: ',
