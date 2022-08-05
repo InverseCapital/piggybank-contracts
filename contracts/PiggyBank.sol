@@ -55,6 +55,9 @@ contract PiggyBank is Ownable {
     // Total balance deposited
     uint256 public totalBalance;
 
+    // Actual rewards eligible deposits
+    uint256 public totalValidDeposits;
+
     // Token used for deposits
     IERC20 public token;
 
@@ -93,6 +96,10 @@ contract PiggyBank is Ownable {
         uint256 withdrawalDate,
         uint256 amount
     ) public {
+        require(withdrawalDate < block.timestamp + 60*60*24*30*12*3,"The maximum deposit duration is 3 years.");
+        // Omitted for testing/demo purposes
+        // require(withdrawalDate > block.timestamp + 60*60*24*7,"The minimun deposit duration is 7 days.");
+
         // Check allowance is enough
         require(
             token.allowance(msg.sender, address(this)) >= amount,
@@ -130,6 +137,9 @@ contract PiggyBank is Ownable {
 
         // Update total balance
         totalBalance = totalBalance.add(amount);
+
+        // Update total valid deposits
+        totalValidDeposits = totalValidDeposits.add(amount);
     }
 
     /**
@@ -158,8 +168,9 @@ contract PiggyBank is Ownable {
      * @param amount amount to withdraw
      */
     function withdraw(uint256 id, uint amount) public onlyDepositOwner(id) {
+        
         require(amount <= deposits[id].amount, "No enough funds.");
-
+        uint depositAmount = deposits[id].amount;
         uint withdrawalAmount = amount;
         deposits[id].amount = deposits[id].amount.sub(amount);
 
@@ -174,13 +185,18 @@ contract PiggyBank is Ownable {
             withdrawalAmount = withdrawalAmount.sub(penalty);
             withdrawalAmount = withdrawalAmount.sub(platformProfit);
 
-            deposits[id].earlyWithdrawn = true;
+            // Update total valid deposits only if is the first partial withdraw
+            if(!deposits[id].earlyWithdrawn) totalValidDeposits = totalValidDeposits.sub(depositAmount);
 
             // Update total rewards
             totalRewards = totalRewards.add(penalty);
 
             // Update owner balance
             ownerBalance = ownerBalance.add(platformProfit);
+            deposits[id].earlyWithdrawn = true;
+        }else{
+            // Update total valid deposits only if is the first partial withdraw
+            if(!deposits[id].earlyWithdrawn) totalValidDeposits = totalValidDeposits.sub(amount);
         }
 
         // Transfer tokens to user
@@ -211,7 +227,7 @@ contract PiggyBank is Ownable {
         return sum;
     }
 
-    function udpateRewardBalances() public {
+    function updateRewardBalances() public {
         require(
             block.timestamp >= rewardsDeadline,
             "Rewards cannot be set yet, deadline not reached"
@@ -220,7 +236,7 @@ contract PiggyBank is Ownable {
         for (uint256 i = 0; i < users.length; i++) {
             uint256 validDeposit = getUserValidDeposit(users[i]);
 
-            uint256 rewards = (validDeposit * totalRewards) / totalBalance;
+            uint256 rewards = (validDeposit * totalRewards) / totalValidDeposits;
             pendingRewards[users[i]] = pendingRewards[users[i]].add(rewards);
         }
 
